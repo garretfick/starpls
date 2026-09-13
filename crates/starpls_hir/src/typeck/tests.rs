@@ -2192,6 +2192,29 @@ def f(items):
 }
 
 #[test]
+fn test_for_iterable_shadowed_by_loop_variable_with_code_flow_analysis() {
+    check_infer_with_code_flow_analysis(
+        r#"
+def f(items):
+    for x in [1, 2, 3]:
+        for x in [x]:
+            x
+"#,
+        expect![[r#"
+            23..24 "x": int
+            29..30 "1": Literal[1]
+            32..33 "2": Literal[2]
+            35..36 "3": Literal[3]
+            28..37 "[1, 2, 3]": list[int]
+            51..52 "x": int
+            57..58 "x": int
+            56..59 "[x]": list[int]
+            73..74 "x": int
+        "#]],
+    );
+}
+
+#[test]
 fn test_for_iterable_undefined_loop_variable() {
     check_infer(
         r#"
